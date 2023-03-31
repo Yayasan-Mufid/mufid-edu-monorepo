@@ -12,7 +12,8 @@
     "prisma-zod-generator": "^0.8.11",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.3",
-    "zod": "^3.21.4"
+    "zod": "^3.21.4",
+    "tsconfig": "*"
   },
   "scripts": {
     "generate": "prisma generate",
