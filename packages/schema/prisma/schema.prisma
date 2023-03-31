@@ -1,0 +1,548 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator zod {
+  provider             = "prisma-zod-generator"
+  isGenerateSelect     = true
+  isGenerateInclude    = true
+  generateModelActions = "findFirst,findMany"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                            String                       @id @default(cuid())
+  name                          String?
+  gender                        String?
+  date_of_birth                 DateTime?
+  place_of_birth                String?
+  username                      String?                      @unique
+  email                         String?                      @unique
+  password                      String?
+  emailVerified                 DateTime? //This stays camelCase for next-auth library
+  image                         String?
+  address                       String?
+  phone_number                  String?
+  wa_number                     String?
+  telegram_id                   String?
+  otp                           String?
+  otp_expired                   DateTime?
+  mandatory_filled              Boolean                      @default(false)
+  suspended                     Boolean                      @default(false)
+  profile_picture               String?
+  accounts                      Account[]
+  sessions                      Session[]
+  roles                         UserRole[]
+  invoices                      Invoice[]                    @relation("target")
+  confirmed_by_me_invoices      Invoice[]                    @relation("confirmed_invoice")
+  managed_programs              ProgramAdmin[]
+  managed_modules               ModuleAdmin[]
+  accessible_modules            ModuleAccess[]
+  module_item_status            ModuleItemStatus[]
+  module_item_attachment_status ModuleItemAttachmentStatus[]
+  applied_groups                StudyGroupApplicant[]
+  enrolled_groups               StudyGroupStudent[]
+  managed_groups                StudyGroupAdmin[]
+  created_questions             Question[]                   @relation("question_creator")
+  validated_questions           Question[]                   @relation("question_validator")
+  exam_sheets                   ExamSheet[]                  @relation("examinee")
+  graded_exam_sheets            ExamSheet[]                  @relation("grader")
+  graded_exam_item              ExamSheetItem[]
+  created_announcements         Announcement[]
+  uploaded_files                UploadedFile[]
+  module_item_question_status   ModuleItemQuestionStatus[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Role {
+  role             String           @id @unique
+  description      String?
+  user_roles       UserRole[]
+  role_permissions RolePermission[]
+}
+
+model UserRole {
+  id        String @id @default(cuid())
+  user_id   String
+  role      Role   @relation(fields: [role_name], references: [role], onDelete: Cascade)
+  role_name String
+  user      User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, role_name])
+}
+
+model Permission {
+  name             String           @id @unique
+  description      String?
+  role_permissions RolePermission[]
+}
+
+model RolePermission {
+  id              String     @id @default(cuid())
+  role            Role       @relation(fields: [role_name], references: [role], onDelete: Cascade)
+  role_name       String
+  permission      Permission @relation(fields: [permission_name], references: [name], onDelete: Cascade)
+  permission_name String
+
+  @@unique([role_name, permission_name])
+}
+
+model UploadedFile {
+  id          String   @id @default(cuid())
+  path        String
+  uploader    User     @relation(fields: [uploader_id], references: [id])
+  uploader_id String
+  uploaded_at DateTime @default(now())
+}
+
+model PaymentAccount {
+  id                 String       @id @default(cuid())
+  name               String
+  type               String
+  account_identifier String
+  description        String
+  logo_url           String
+  invoices           Invoice[]
+  study_groups       StudyGroup[]
+}
+
+model Invoice {
+  id                  String               @id @default(cuid())
+  user_id             String
+  user                User                 @relation(name: "target", fields: [user_id], references: [id])
+  title               String
+  description         String
+  amount              Float
+  payment_method      String
+  payment_account_id  String
+  account             PaymentAccount       @relation(fields: [payment_account_id], references: [id])
+  paid_amount         Float?
+  mismatch            Float?
+  paid_at             DateTime?
+  payment_receipt_url String?
+  confirmer           String?
+  confirmed_by        User?                @relation(name: "confirmed_invoice", fields: [confirmer], references: [id])
+  confirmed_at        DateTime?
+  status              String               @default("CREATED")
+  deadline            DateTime
+  items               InvoiceItem[]
+  applicant           StudyGroupApplicant?
+}
+
+model Product {
+  id            String        @id @default(cuid())
+  name          String
+  description   String
+  unit_price    Float
+  invoice_items InvoiceItem[]
+}
+
+model InvoiceItem {
+  id         String   @id @default(cuid())
+  invoice_id String
+  invoice    Invoice  @relation(fields: [invoice_id], references: [id])
+  name       String
+  quantity   Int
+  unit_price Float
+  discount   Float
+  product_id String
+  product    Product? @relation(fields: [product_id], references: [id])
+}
+
+model Program {
+  id            String         @id @default(cuid())
+  code          String         @unique
+  title         String         @unique
+  description   String
+  cover_img_url String?
+  bg_img_url    String?
+  published     DateTime?
+  modules       Module[]
+  admins        ProgramAdmin[]
+  questions     Question[]
+}
+
+model ProgramAdmin {
+  id          String   @id @default(cuid())
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id])
+  program_id  String
+  program     Program  @relation(fields: [program_id], references: [id])
+  assigned_at DateTime @default(now())
+
+  @@unique([user_id, program_id])
+}
+
+model Module {
+  id            String         @id @default(cuid())
+  program_id    String
+  program       Program        @relation(fields: [program_id], references: [id])
+  title         String
+  code          String         @unique
+  slug          String?
+  description   String
+  published     DateTime?
+  archived      Boolean        @default(false)
+  seq           Int
+  cover_img_url String?
+  bg_img_url    String?
+  admins        ModuleAdmin[]
+  items         ModuleItem[]
+  students      ModuleAccess[]
+  study_groups  StudyGroup[]
+  questions     Question[]
+  exams         Exam[]
+}
+
+model ModuleAdmin {
+  id          String   @id @default(cuid())
+  module_id   String
+  module      Module   @relation(fields: [module_id], references: [id])
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id])
+  assigned_at DateTime @default(now())
+
+  @@unique([module_id, user_id])
+}
+
+model ModuleAccess {
+  id         String   @id @default(cuid())
+  module_id  String
+  module     Module   @relation(fields: [module_id], references: [id])
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id])
+  granted_on DateTime @default(now())
+
+  @@unique([module_id, user_id])
+}
+
+model ModuleItem {
+  id             String                 @id @default(cuid())
+  module_id      String
+  module         Module                 @relation(fields: [module_id], references: [id])
+  children       ModuleItem[]           @relation("Parent")
+  parent_item_id String?
+  parent_item    ModuleItem?            @relation("Parent", fields: [parent_item_id], references: [id])
+  is_root        Boolean?
+  title          String
+  code           String
+  text           String
+  seq            Int                    @default(0)
+  is_quiz        Boolean                @default(false)
+  mandatory      Boolean                @default(true)
+  cover_img_url  String?
+  bg_img_url     String?
+  attachments    ModuleItemAttachment[]
+  user_status    ModuleItemStatus[]
+  schedule       StudyGroupSchedule[]
+  quiz           ModuleItemQuestion[]
+}
+
+model ModuleItemQuestion {
+  id             String                     @id @default(cuid())
+  module_item_id String
+  module_item    ModuleItem                 @relation(fields: [module_item_id], references: [id])
+  question_id    String
+  question       Question                   @relation(fields: [question_id], references: [id])
+  user_status    ModuleItemQuestionStatus[]
+}
+
+model ModuleItemQuestionStatus {
+  question_id String
+  question    ModuleItemQuestion @relation(fields: [question_id], references: [id])
+  user_id     String
+  user        User               @relation(fields: [user_id], references: [id])
+  status      String // PASSED, FAILED
+
+  @@unique([question_id, user_id])
+}
+
+model ModuleItemAttachment {
+  id             String                       @id @default(cuid())
+  module_item_id String
+  module_item    ModuleItem                   @relation(fields: [module_item_id], references: [id])
+  description    String
+  type           String
+  url            String
+  seq            Int
+  mandatory      Boolean                      @default(true)
+  user_status    ModuleItemAttachmentStatus[]
+}
+
+model ModuleItemStatus {
+  module_item_id String
+  module_item    ModuleItem @relation(fields: [module_item_id], references: [id])
+  user_id        String
+  user           User       @relation(fields: [user_id], references: [id])
+  status         String     @default("TOUCHED")
+  updated_at     DateTime   @default(now())
+
+  @@unique([module_item_id, user_id])
+}
+
+model ModuleItemAttachmentStatus {
+  attachment_id String
+  attachment    ModuleItemAttachment @relation(fields: [attachment_id], references: [id])
+  user_id       String
+  user          User                 @relation(fields: [user_id], references: [id])
+  status        String               @default("TOUCHED")
+  updated_at    DateTime             @default(now())
+
+  @@unique([attachment_id, user_id])
+}
+
+model StudyGroup {
+  id                 String                   @id @default(cuid())
+  gender             String
+  name               String                   @unique
+  code               String                   @unique
+  module_id          String
+  module             Module                   @relation(fields: [module_id], references: [id])
+  capacity           Int
+  enrollment_start   DateTime
+  enrollment_end     DateTime
+  active_start       DateTime
+  active_end         DateTime
+  logo_url           String
+  invoice_amount     Float
+  invoice_title      String
+  invoice_account_id String
+  invoice_account    PaymentAccount           @relation(fields: [invoice_account_id], references: [id])
+  use_schedule       Boolean?
+  application_note   String?
+  admins             StudyGroupAdmin[]
+  schedule           StudyGroupSchedule[]
+  applicants         StudyGroupApplicant[]
+  students           StudyGroupStudent[]
+  exams              StudyGroupExam[]
+  announcements      StudyGroupAnnouncement[]
+}
+
+model StudyGroupSchedule {
+  study_group_id String
+  study_group    StudyGroup @relation(fields: [study_group_id], references: [id])
+  module_item_id String
+  module_item    ModuleItem @relation(fields: [module_item_id], references: [id])
+
+  @@unique([study_group_id, module_item_id])
+}
+
+model StudyGroupApplicant {
+  study_group_id String
+  study_group    StudyGroup @relation(fields: [study_group_id], references: [id])
+  user_id        String
+  user           User       @relation(fields: [user_id], references: [id])
+  invoice_id     String?    @unique
+  invoice        Invoice?   @relation(fields: [invoice_id], references: [id])
+  created_at     DateTime   @default(now())
+
+  @@unique([study_group_id, user_id])
+}
+
+model StudyGroupStudent {
+  study_group_id String
+  study_group    StudyGroup @relation(fields: [study_group_id], references: [id])
+  user_id        String
+  user           User       @relation(fields: [user_id], references: [id])
+
+  @@unique([study_group_id, user_id])
+}
+
+model StudyGroupAdmin {
+  study_group_id String
+  study_group    StudyGroup @relation(fields: [study_group_id], references: [id])
+  user_id        String
+  user           User       @relation(fields: [user_id], references: [id])
+
+  @@unique([study_group_id, user_id])
+}
+
+model Question {
+  id                   String                @id @default(cuid())
+  program_id           String?
+  program              Program?              @relation(fields: [program_id], references: [id])
+  module_id            String?
+  module               Module?               @relation(fields: [module_id], references: [id])
+  text                 String
+  type                 String
+  grading_hint         String?
+  max_score            Float
+  randomize_choices    Boolean               @default(true)
+  created_by_id        String
+  validated_by_id      String?
+  validator_note       String?
+  created_by           User                  @relation("question_creator", fields: [created_by_id], references: [id])
+  validated_by         User?                 @relation("question_validator", fields: [validated_by_id], references: [id])
+  created_at           DateTime              @default(now())
+  validated_at         DateTime?
+  choices              QuestionChoice[]
+  exam_sections        ExamSectionQuestion[]
+  exam_items           ExamSheetItem[]
+  module_item_question ModuleItemQuestion[]
+}
+
+model QuestionChoice {
+  id          String   @id @default(cuid())
+  question_id String
+  question    Question @relation(fields: [question_id], references: [id])
+  text        String
+  answer_key  Boolean  @default(false)
+  seq         Int
+}
+
+model Exam {
+  id                String           @id @default(cuid())
+  title             String
+  code              String
+  module_id         String
+  module            Module           @relation(fields: [module_id], references: [id])
+  rules             String
+  sections          ExamSection[]
+  study_group_exams StudyGroupExam[]
+
+  @@unique([title, code, module_id])
+}
+
+model ExamSection {
+  id                  String                @id @default(cuid())
+  exam_id             String
+  exam                Exam                  @relation(fields: [exam_id], references: [id])
+  title               String
+  text                String
+  randomize_questions Boolean               @default(true)
+  nb_of_questions     Int
+  seq                 Int
+  default_point       Float
+  weight              Float                 @default(1)
+  questions           ExamSectionQuestion[]
+  sheet_sections      ExamSheetSection[]
+}
+
+model ExamSectionQuestion {
+  section_id  String
+  section     ExamSection @relation(fields: [section_id], references: [id])
+  question_id String
+  question    Question    @relation(fields: [question_id], references: [id])
+  min_score   Float       @default(0)
+  max_scrore  Float       @default(1)
+
+  @@unique([section_id, question_id])
+}
+
+model StudyGroupExam {
+  id            String      @id @default(cuid())
+  exam_id       String
+  exam          Exam        @relation(fields: [exam_id], references: [id])
+  group_id      String
+  group         StudyGroup  @relation(fields: [group_id], references: [id])
+  start_time    DateTime
+  end_time      DateTime
+  duration_hour Float
+  weight        Float?
+  sheets        ExamSheet[]
+}
+
+model ExamSheet {
+  id            String             @id @default(cuid())
+  group_exam_id String
+  group_exam    StudyGroupExam     @relation(fields: [group_exam_id], references: [id])
+  user_id       String
+  grader_id     String?
+  user          User               @relation("examinee", fields: [user_id], references: [id])
+  grader        User?              @relation("grader", fields: [grader_id], references: [id])
+  status        String             @default("CREATED")
+  start_time    DateTime?
+  end_time      DateTime?
+  graded_at     DateTime?
+  grader_notes  String?
+  score         Float?
+  sections      ExamSheetSection[]
+  token_text    String?
+
+  @@unique([group_exam_id, user_id])
+}
+
+model ExamSheetSection {
+  id            String          @id @default(cuid())
+  exam_sheet_id String
+  exam_sheet    ExamSheet       @relation(fields: [exam_sheet_id], references: [id])
+  section_id    String
+  section       ExamSection     @relation(fields: [section_id], references: [id])
+  items         ExamSheetItem[]
+}
+
+model ExamSheetItem {
+  id           String           @id @default(cuid())
+  section_id   String
+  section      ExamSheetSection @relation(fields: [section_id], references: [id])
+  question_id  String
+  question     Question         @relation(fields: [question_id], references: [id])
+  choices_id   String?
+  answer       String?
+  score        Float?
+  graded_note  String?
+  graded_at    DateTime?
+  graded_by_id String
+  graded_by    User?            @relation(fields: [graded_by_id], references: [id])
+  seq          Int
+}
+
+model Announcement {
+  id            String                   @id @default(cuid())
+  created_by_id String
+  created_by    User                     @relation(fields: [created_by_id], references: [id])
+  title         String
+  text          String
+  start_date    DateTime
+  end_date      DateTime
+  public        Boolean                  @default(false)
+  study_groups  StudyGroupAnnouncement[]
+}
+
+model StudyGroupAnnouncement {
+  announcement_id String
+  announcement    Announcement @relation(fields: [announcement_id], references: [id])
+  study_group_id  String
+  study_group     StudyGroup   @relation(fields: [study_group_id], references: [id])
+
+  @@unique([announcement_id, study_group_id])
+}

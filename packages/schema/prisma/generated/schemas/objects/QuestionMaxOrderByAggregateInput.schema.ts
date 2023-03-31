@@ -1,0 +1,24 @@
+import { z } from 'zod';
+import { SortOrderSchema } from '../enums/SortOrder.schema';
+
+import type { Prisma } from '@prisma/client';
+
+const Schema: z.ZodType<Prisma.QuestionMaxOrderByAggregateInput> = z
+  .object({
+    id: z.lazy(() => SortOrderSchema).optional(),
+    program_id: z.lazy(() => SortOrderSchema).optional(),
+    module_id: z.lazy(() => SortOrderSchema).optional(),
+    text: z.lazy(() => SortOrderSchema).optional(),
+    type: z.lazy(() => SortOrderSchema).optional(),
+    grading_hint: z.lazy(() => SortOrderSchema).optional(),
+    max_score: z.lazy(() => SortOrderSchema).optional(),
+    randomize_choices: z.lazy(() => SortOrderSchema).optional(),
+    created_by_id: z.lazy(() => SortOrderSchema).optional(),
+    validated_by_id: z.lazy(() => SortOrderSchema).optional(),
+    validator_note: z.lazy(() => SortOrderSchema).optional(),
+    created_at: z.lazy(() => SortOrderSchema).optional(),
+    validated_at: z.lazy(() => SortOrderSchema).optional(),
+  })
+  .strict();
+
+export const QuestionMaxOrderByAggregateInputObjectSchema = Schema;

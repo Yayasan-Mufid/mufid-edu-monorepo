@@ -1,0 +1,14 @@
+import { z } from 'zod';
+
+import type { Prisma } from '@prisma/client';
+
+const Schema: z.ZodType<Prisma.StudyGroupApplicantMinAggregateInputType> = z
+  .object({
+    study_group_id: z.literal(true).optional(),
+    user_id: z.literal(true).optional(),
+    invoice_id: z.literal(true).optional(),
+    created_at: z.literal(true).optional(),
+  })
+  .strict();
+
+export const StudyGroupApplicantMinAggregateInputObjectSchema = Schema;
