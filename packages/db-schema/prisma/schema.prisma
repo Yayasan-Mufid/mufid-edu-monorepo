@@ -9,6 +9,15 @@ generator zod {
   generateModelActions = "findFirst,findMany"
 }
 
+generator trpc {
+  provider          = "prisma-trpc-generator"
+  withZod           = true
+  withMiddleware    = false
+  withShield        = false
+  contextPath       = "../src/context"
+  trpcOptionsPath   = "../src/trpcOptions"
+}
+
 datasource db {
   provider          = "postgresql"
   url               = env("DATABASE_URL")

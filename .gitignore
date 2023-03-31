@@ -17,6 +17,10 @@ build
 .DS_Store
 *.pem
 
+# schema
+packages/db-schema/prisma/generated
+packages/db-schema/prisma/generated/schemas/*.ts
+
 # debug
 npm-debug.log*
 yarn-debug.log*
