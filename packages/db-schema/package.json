@@ -1,0 +1,30 @@
+{
+  "name": "db-schema",
+  "version": "1.0.0",
+  "description": "Prisma for mufid-edu",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "author": "Mufid",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^4.12.0",
+    "@types/node": "^18.15.11",
+    "prisma": "^4.12.0",
+    "prisma-zod-generator": "^0.8.11",
+    "ts-node": "^10.9.1",
+    "tsconfig": "*",
+    "typescript": "^5.0.3",
+    "zod": "^3.21.4"
+  },
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push --skip-generate"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
+  "devDependencies": {
+    "prisma": "^4.12.0",
+    "typescript": "^5.0.3"
+  }
+}
