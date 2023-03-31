@@ -1,3 +1,3 @@
-import { PrismaClient } from 'db-schema';
+import { PrismaClient, generatedSchema } from 'db-schema';
 
 const prisma = new PrismaClient();
