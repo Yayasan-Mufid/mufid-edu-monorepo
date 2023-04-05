@@ -7,30 +7,15 @@
     "outDir": "dist/",
     "esModuleInterop": true,
     "allowJs": true,
-    "lib": [
-      "dom",
-      "es6"
-    ],
+    "lib": ["dom", "es6"],
     "baseUrl": ".",
     "rootDir": ".",
     "paths": {
-      "@services/*": [
-        "src/services/*"
-      ],
-      "@handlers/*": [
-        "src/handlers/*"
-      ]
+      "@services/*": ["src/services/*"],
+      "@handlers/*": ["src/handlers/*"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "tests/**/*.spec.ts"
-  ],
-  "files": [
-    "src/server.ts"
-  ]
+  "exclude": ["node_modules", "dist"],
+  "include": ["src/**/*.ts", "tests/**/*.spec.ts"],
+  "files": ["src/server.ts"]
 }
