@@ -18,8 +18,7 @@ build
 *.pem
 
 # schema
-packages/db-schema/prisma/generated
-packages/db-schema/prisma/generated/schemas/*.ts
+packages/db-schema/prisma/generated/schemas/
 
 # debug
 npm-debug.log*

@@ -1,0 +1,15 @@
+import { initTRPC } from '@trpc/server';
+import * as TrpcExpress from '@trpc/server/adapters/express';
+
+const t = initTRPC.create();
+ 
+export const router = t.router;
+export const middleware = t.middleware;
+export const publicProcedure = t.procedure;
+
+export function createContext({
+    req,
+    res,
+  }: TrpcExpress.CreateExpressContextOptions):void {
+    console.log(req, res);
+}

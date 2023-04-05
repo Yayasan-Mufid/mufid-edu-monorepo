@@ -1,6 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
+  "globalEnv": ["BACKEND_PORT"],
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
@@ -16,6 +17,9 @@
       "cache": false
     },
     "db:push": {
+      "cache": false
+    },
+    "be:start" : {
       "cache": false
     }
   }

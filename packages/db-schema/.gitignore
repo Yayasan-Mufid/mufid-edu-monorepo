@@ -1,2 +1,2 @@
 node_modules/
-prisma/generated/schemas/*
+prisma/generated/schemas/**.*.ts
