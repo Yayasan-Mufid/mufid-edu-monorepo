@@ -1,6 +1,5 @@
 {
-    "extends": "tsconfig/base.json",
-    "include": ["**/*.ts", "**/*.tsx"],
-    "exclude": ["node_modules", "prisma/generated/schemas/**/*.schema.ts"]
-  }
-  
+  "extends": "tsconfig/base.json",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "prisma/generated/schemas/**/*.schema.ts"]
+}

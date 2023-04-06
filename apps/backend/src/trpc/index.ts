@@ -10,7 +10,6 @@ export function createContext({
   req,
   res,
 }: TrpcExpress.CreateExpressContextOptions) {
-  console.log(res);
   return {
     user: req.user,
   };
