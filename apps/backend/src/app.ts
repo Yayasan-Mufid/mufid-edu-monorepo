@@ -2,13 +2,13 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import { createContext } from './trpc';
-import TrpcHandler from './trpc/handler';
+import { TrpcHandler } from './trpc/handler';
 
 export default class App {
   public app: Application;
-  public trpcHandler: TrpcHandler;
-
   public port: number;
+  public trpcHandler = new TrpcHandler();
+
   constructor(controllers: any, port: number) {
     this.app = express();
     this.port = port;
@@ -25,10 +25,8 @@ export default class App {
     this.app.use(
       '/trpc',
       trpcExpress.createExpressMiddleware({
-        router: this.trpcHandler.appRouter,
-        createContext: (
-          expressContext: trpcExpress.CreateExpressContextOptions,
-        ) => createContext,
+        router: this.trpcHandler.appRouter(),
+        createContext,
       }),
     );
     controllers.forEach((controller: any) => {

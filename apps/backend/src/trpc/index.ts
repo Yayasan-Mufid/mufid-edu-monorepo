@@ -6,10 +6,12 @@ const t = initTRPC.create();
 export const router = t.router;
 export const middleware = t.middleware;
 export const publicProcedure = t.procedure;
-
 export function createContext({
   req,
   res,
-}: TrpcExpress.CreateExpressContextOptions): void {
-  console.log(req, res);
+}: TrpcExpress.CreateExpressContextOptions) {
+  console.log(res);
+  return {
+    user: req.user,
+  };
 }
